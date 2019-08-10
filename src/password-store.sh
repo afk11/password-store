@@ -7,10 +7,15 @@ umask "${PASSWORD_STORE_UMASK:-077}"
 set -o pipefail
 
 GPG_OPTS=( $PASSWORD_STORE_GPG_OPTS "--quiet" "--yes" "--compress-algo=none" "--no-encrypt-to" )
-GPG="gpg"
-export GPG_TTY="${GPG_TTY:-$(tty 2>/dev/null)}"
-which gpg2 &>/dev/null && GPG="gpg2"
-[[ -n $GPG_AGENT_INFO || $GPG == "gpg2" ]] && GPG_OPTS+=( "--batch" "--use-agent" )
+
+if [ "${PASSWORD_STORE_GPG_PROGRAM}" != "" ]; then
+    GPG="${PASSWORD_STORE_GPG_PROGRAM}"
+else
+    export GPG_TTY="${GPG_TTY:-$(tty 2>/dev/null)}"
+    which gpg2 &>/dev/null && GPG="gpg2"
+    [[ -n $GPG_AGENT_INFO || $GPG == "gpg2" ]] && GPG_OPTS+=( "--batch" "--use-agent" )
+    GPG="${PASSWORD_STORE_GPG_PROGRAM:$GPG}"
+fi
 
 PREFIX="${PASSWORD_STORE_DIR:-$HOME/.password-store}"
 EXTENSIONS="${PASSWORD_STORE_EXTENSIONS_DIR:-$PREFIX/.extensions}"
